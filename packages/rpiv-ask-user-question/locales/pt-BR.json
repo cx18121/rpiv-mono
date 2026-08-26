@@ -26,6 +26,6 @@
 
   "editor.failed": "Falha no editor externo",
 
-  "rpc.multi_instructions": "Digite os números de todas as opções aplicáveis, separados por vírgula (ex.: \"1,3\") ou digite uma resposta própria em texto.",
+  "rpc.multi_instructions": "Digite os números de todas as opções aplicáveis, separados por vírgula (ex.: \"1,3\") ou digite uma resposta própria em texto. Para enviar ambos, separe-os com ponto e vírgula (ex.: \"1,3; resposta própria\").",
   "rpc.custom_answer_title": "Digite sua resposta:"
 }

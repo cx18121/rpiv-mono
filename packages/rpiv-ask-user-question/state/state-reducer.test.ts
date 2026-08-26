@@ -28,6 +28,19 @@ describe("reduce — nav", () => {
 		expect(r.effects).toEqual([{ kind: "set_input_buffer", value: "Hello" }]);
 	});
 
+	it("nav onto kind:'other' restores custom text from a multi-select answer", () => {
+		const answers = new Map<number, QuestionAnswer>([
+			[0, { questionIndex: 0, question: "Pick one", kind: "multi", answer: "Other area", selected: ["A"] }],
+		]);
+		const ctx = makeCtx({
+			questions: [makeQuestion({ multiSelect: true })],
+			itemsByTab: [itemsWithOther],
+		});
+		const result = reduce(makeState({ answers }), { kind: "nav", nextIndex: 2, inputValue: "" }, ctx);
+		expect(result.state.inputMode).toBe(true);
+		expect(result.effects).toEqual([{ kind: "set_input_buffer", value: "Other area" }]);
+	});
+
 	it("nav onto kind:'other' row with no draft resets the buffer", () => {
 		const ctx = makeCtx({ itemsByTab: [itemsWithOther] });
 		const r = reduce(makeState(), { kind: "nav", nextIndex: 2, inputValue: "" }, ctx);
@@ -167,6 +180,20 @@ describe("reduce — toggle", () => {
 		expect(r2.state.multiSelectChecked.has(0)).toBe(false);
 		expect(r2.state.answers.has(0)).toBe(false);
 	});
+
+	it("preserves custom text while options are toggled", () => {
+		const ctx = makeCtx({ questions: [makeQuestion({ multiSelect: true })] });
+		const answers = new Map<number, QuestionAnswer>([
+			[0, { questionIndex: 0, question: "Pick one", kind: "multi", answer: "Other area", selected: ["A"] }],
+		]);
+		const state = makeState({ answers, multiSelectChecked: new Set([0]) });
+		const result = reduce(state, { kind: "toggle", index: 1 }, ctx);
+		expect(result.state.answers.get(0)).toMatchObject({
+			kind: "multi",
+			answer: "Other area",
+			selected: ["A", "B"],
+		});
+	});
 });
 
 describe("reduce — round-trip property [toggle, tab_switch, tab_switch_back] preserves multiSelectChecked (precedent f4fdd25)", () => {
@@ -195,6 +222,19 @@ describe("reduce — multi_confirm", () => {
 		expect(r.state.answers.get(0)?.selected).toEqual(["A", "B"]);
 		expect([...r.state.multiSelectChecked].sort()).toEqual([0, 1]);
 		expect(r.effects.some((e) => e.kind === "done")).toBe(true);
+	});
+
+	it("keeps a previously confirmed custom answer", () => {
+		const ctx = makeCtx({ questions: [makeQuestion({ multiSelect: true })] });
+		const answers = new Map<number, QuestionAnswer>([
+			[0, { questionIndex: 0, question: "Pick one", kind: "multi", answer: "Other area", selected: ["A"] }],
+		]);
+		const result = reduce(makeState({ answers }), { kind: "multi_confirm", selected: ["A", "B"] }, ctx);
+		expect(result.state.answers.get(0)).toMatchObject({
+			kind: "multi",
+			answer: "Other area",
+			selected: ["A", "B"],
+		});
 	});
 });
 
@@ -389,7 +429,7 @@ describe("reduce — submit_nav / ignore", () => {
 	});
 });
 
-describe("confirmHandler — custom answer clears multiSelectChecked (mutual exclusivity)", () => {
+describe("confirmHandler — multi-select custom answers are additive", () => {
 	const multiQ: QuestionData = {
 		question: "areas?",
 		header: "H",
@@ -400,19 +440,34 @@ describe("confirmHandler — custom answer clears multiSelectChecked (mutual exc
 		],
 	};
 
-	it("custom confirm on a multi-select tab clears pre-existing checks", () => {
+	it("preserves checked options when custom text is confirmed", () => {
 		const state = makeState({
 			currentTab: 0,
 			multiSelectChecked: new Set([0, 1]),
+			customDraftsByTab: new Map([[0, "custom-text"]]),
 		});
 		const ctx = makeCtx({ questions: [multiQ] });
 		const result = reduce(
 			state,
-			{ kind: "confirm", answer: { questionIndex: 0, question: "areas?", kind: "custom", answer: "custom-text" } },
+			{
+				kind: "confirm",
+				answer: {
+					questionIndex: 0,
+					question: "areas?",
+					kind: "multi",
+					answer: "custom-text",
+					selected: ["FE", "BE"],
+				},
+			},
 			ctx,
 		);
-		expect(result.state.multiSelectChecked.size).toBe(0);
-		expect(result.state.answers.get(0)?.kind).toBe("custom");
+		expect(result.state.multiSelectChecked).toEqual(new Set([0, 1]));
+		expect(result.state.customDraftsByTab.has(0)).toBe(false);
+		expect(result.state.answers.get(0)).toMatchObject({
+			kind: "multi",
+			answer: "custom-text",
+			selected: ["FE", "BE"],
+		});
 	});
 
 	it("option confirm on a single-select tab leaves multiSelectChecked untouched (no spurious clear)", () => {

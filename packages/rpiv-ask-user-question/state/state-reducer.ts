@@ -71,7 +71,9 @@ function persistMultiSelectAnswer(state: QuestionnaireState, ctx: ApplyContext):
 		if (state.multiSelectChecked.has(i)) selected.push(q.options[i]!.label);
 	}
 	const out = new Map(state.answers);
-	if (selected.length === 0) {
+	const current = out.get(state.currentTab);
+	const customAnswer = current?.kind === "multi" ? current.answer : null;
+	if (selected.length === 0 && !customAnswer) {
 		out.delete(state.currentTab);
 		return out;
 	}
@@ -80,7 +82,7 @@ function persistMultiSelectAnswer(state: QuestionnaireState, ctx: ApplyContext):
 		questionIndex: state.currentTab,
 		question: q.question,
 		kind: "multi",
-		answer: null,
+		answer: customAnswer,
 		selected,
 		...(pendingNotes && pendingNotes.length > 0 ? { notes: pendingNotes } : {}),
 	});
@@ -100,7 +102,9 @@ function customDraftValueFor(state: QuestionnaireState, tab: number): string {
 	const draft = state.customDraftsByTab.get(tab);
 	if (draft !== undefined) return draft;
 	const answer = state.answers.get(tab);
-	return answer?.kind === "custom" && typeof answer.answer === "string" ? answer.answer : "";
+	return (answer?.kind === "custom" || answer?.kind === "multi") && typeof answer.answer === "string"
+		? answer.answer
+		: "";
 }
 
 function setCustomDraft(state: QuestionnaireState, tab: number, value: string): ReadonlyMap<number, string> {
@@ -208,17 +212,14 @@ const confirmHandler: Handler<"confirm"> = (state, action, ctx) => {
 	}
 	const answers = new Map(state.answers);
 	answers.set(answer.questionIndex, answer);
-	// Custom free-text on a multi-select tab is mutually exclusive with checkbox selections:
-	// clear the checked set immediately so [✔] glyphs vanish on Enter. (A custom answer
-	// carries no `selected` array, so syncMultiSelectFromAnswers keeps it empty on tab-back.)
-	const isCustomMulti = answer.kind === "custom" && ctx.questions[answer.questionIndex]?.multiSelect === true;
 	const customDraftsByTab =
-		answer.kind === "custom" ? withoutCustomDraft(state, answer.questionIndex) : state.customDraftsByTab;
+		answer.kind === "custom" || answer.kind === "multi"
+			? withoutCustomDraft(state, answer.questionIndex)
+			: state.customDraftsByTab;
 	const next: QuestionnaireState = {
 		...state,
 		answers,
 		customDraftsByTab,
-		...(isCustomMulti ? { multiSelectChecked: new Set<number>() } : {}),
 	};
 	if (action.autoAdvanceTab !== undefined) return switchTabResult(next, action.autoAdvanceTab, ctx);
 	return doneFor(next, ctx, false);
@@ -238,11 +239,12 @@ const multiConfirmHandler: Handler<"multi_confirm"> = (state, action, ctx) => {
 	if (!q) return { state, effects: [] };
 	const pendingNotes = state.notesByTab.get(state.currentTab);
 	const answers = new Map(state.answers);
+	const current = answers.get(state.currentTab);
 	answers.set(state.currentTab, {
 		questionIndex: state.currentTab,
 		question: q.question,
 		kind: "multi",
-		answer: null,
+		answer: current?.kind === "multi" ? current.answer : null,
 		selected: action.selected,
 		...(pendingNotes && pendingNotes.length > 0 ? { notes: pendingNotes } : {}),
 	});

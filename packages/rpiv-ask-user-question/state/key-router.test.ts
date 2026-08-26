@@ -425,10 +425,10 @@ describe("routeKey — multiSelect free-text ('Type something.')", () => {
 		{ kind: "next", label: "Next" },
 	];
 
-	it("Enter on the 'Type something.' row (inputMode) → confirm kind:'custom' with the buffer", () => {
+	it("Enter on the 'Type something.' row preserves checked options with the custom answer", () => {
 		const action = routeKey(
 			sentinel(KEY.CONFIRM),
-			makeState({ optionIndex: 3, inputMode: true }),
+			makeState({ optionIndex: 3, inputMode: true, multiSelectChecked: new Set([0, 2]) }),
 			makeRuntime({
 				questions: [multiQ],
 				isMulti: false,
@@ -439,8 +439,11 @@ describe("routeKey — multiSelect free-text ('Type something.')", () => {
 		);
 		expect(action.kind).toBe("confirm");
 		if (action.kind === "confirm") {
-			expect(action.answer.kind).toBe("custom");
-			expect(action.answer.answer).toBe("typed answer");
+			expect(action.answer).toMatchObject({
+				kind: "multi",
+				answer: "typed answer",
+				selected: ["FE", "Tests"],
+			});
 		}
 	});
 

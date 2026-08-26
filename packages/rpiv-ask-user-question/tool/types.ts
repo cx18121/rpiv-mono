@@ -100,8 +100,8 @@ export type QuestionParams = Static<typeof QuestionParamsSchema>;
  *
  * Variant semantics:
  * - `option`: user picked one of the author-defined options. `answer` is the option's label.
- * - `custom`: user typed free-text via the "Type something." row. `answer` is the typed text or null.
- * - `multi`: user committed multi-select choices. `selected` carries chosen labels; `answer` is null.
+ * - `custom`: user typed free-text for a single-select question. `answer` is the typed text or null.
+ * - `multi`: user committed a multi-select question. `selected` carries chosen labels and `answer` carries optional free-text from the "Type something." row.
  */
 export interface QuestionAnswer {
 	questionIndex: number;

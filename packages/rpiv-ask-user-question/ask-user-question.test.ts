@@ -249,6 +249,41 @@ describe("buildQuestionnaireResponse — completed", () => {
 		expect(r.content[0].text).toContain('"Areas"="FE, BE"');
 	});
 
+	it("multiSelect answer renders selected labels and custom text together", () => {
+		const params: QuestionParams = {
+			questions: [
+				{
+					question: "Areas",
+					header: "Areas",
+					multiSelect: true,
+					options: [
+						{ label: "FE", description: "Frontend" },
+						{ label: "BE", description: "Backend" },
+					],
+				},
+			],
+		};
+		const result: QuestionnaireResult = {
+			cancelled: false,
+			answers: [
+				{
+					questionIndex: 0,
+					question: "Areas",
+					kind: "multi",
+					answer: "Something else",
+					selected: ["FE", "BE"],
+				},
+			],
+		};
+		const r = buildQuestionnaireResponse(result, params);
+		expect(r.content[0].text).toContain('"Areas"="FE, BE, Something else"');
+		expect(r.details.answers[0]).toMatchObject({
+			kind: "multi",
+			answer: "Something else",
+			selected: ["FE", "BE"],
+		});
+	});
+
 	it("custom typed answer renders raw text (no 'User answered:' prefix)", () => {
 		const params: QuestionParams = {
 			questions: [

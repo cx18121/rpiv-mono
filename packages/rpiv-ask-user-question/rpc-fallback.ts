@@ -17,7 +17,8 @@
  * a free-text numbers input instead of checkbox rows. The "Type something."
  * escape is preserved on both variants — multi-select treats any non-index
  * input as a typed custom answer — matching
- * `ROW_INTENT_META.other.autoAppendOnMultiSelect`.
+ * `ROW_INTENT_META.other.autoAppendOnMultiSelect`. A semicolon combines selected
+ * option numbers with custom text in one response.
  */
 
 import { displayLabel, t } from "./state/i18n-bridge.js";
@@ -30,7 +31,7 @@ import type { QuestionAnswer, QuestionData, QuestionnaireResult, QuestionParams 
  * `displayLabel("other")` — same source as the TUI row.
  */
 const MULTI_SELECT_INSTRUCTIONS =
-	'Enter the numbers of all that apply, comma-separated (e.g. "1,3"), or type a custom answer as plain text.';
+	'Enter the numbers of all that apply, comma-separated (e.g. "1,3"), or type a custom answer as plain text. To submit both, separate them with a semicolon (e.g. "1,3; custom answer").';
 const CUSTOM_ANSWER_TITLE = "Type your answer:";
 const MULTI_SELECT_PLACEHOLDER = "1,3";
 
@@ -130,6 +131,19 @@ async function askSingleSelect(
 	return { questionIndex, question: q.question, kind: "custom", answer: typed };
 }
 
+function parseMultiSelectLabels(value: string, q: QuestionData): string[] | null {
+	if (value.trim().length === 0) return [];
+	const tokens = value.split(/[,\s]+/).filter((token) => token.length > 0);
+	const indices = tokens.map((token) => (/^\d+\.?$/.test(token) ? parseIndex(token, q.options.length) : null));
+	if (!indices.every((index): index is number => index != null)) return null;
+	const selected: string[] = [];
+	for (const index of indices) {
+		const label = q.options[index].label;
+		if (!selected.includes(label)) selected.push(label);
+	}
+	return selected;
+}
+
 /** `undefined` means the user dismissed the dialog (cancel the questionnaire). */
 async function askMultiSelect(
 	ui: DialogUI,
@@ -148,19 +162,26 @@ async function askMultiSelect(
 		// Deliberate empty commit — same as pressing "Next" with nothing toggled.
 		return { questionIndex, question: q.question, kind: "multi", answer: null, selected: [] };
 	}
-	const tokens = trimmed.split(/[,\s]+/).filter((tok) => tok.length > 0);
-	const indices = tokens.map((tok) => (/^\d+\.?$/.test(tok) ? parseIndex(tok, q.options.length) : null));
-	if (indices.every((i): i is number => i != null)) {
-		const selected: string[] = [];
-		for (const i of indices) {
-			const label = q.options[i].label;
-			if (!selected.includes(label)) selected.push(label);
+	const separator = trimmed.indexOf(";");
+	if (separator >= 0) {
+		const selected = parseMultiSelectLabels(trimmed.slice(0, separator), q);
+		if (selected !== null) {
+			const customAnswer = trimmed.slice(separator + 1).trim();
+			return {
+				questionIndex,
+				question: q.question,
+				kind: "multi",
+				answer: customAnswer.length > 0 ? customAnswer : null,
+				selected,
+			};
 		}
+	}
+	const selected = parseMultiSelectLabels(trimmed, q);
+	if (selected !== null) {
 		return { questionIndex, question: q.question, kind: "multi", answer: null, selected };
 	}
 	// Any non-index token (words, or an out-of-range number like "13" for three
-	// options) means the user typed an answer, not a selection. Preserve it
-	// verbatim as a custom answer instead of silently dropping their input —
-	// this is also the multi-select "Type something." escape.
-	return { questionIndex, question: q.question, kind: "custom", answer: trimmed };
+	// options) is a custom multi-select answer. Preserve it alongside an empty
+	// selection instead of changing the answer kind.
+	return { questionIndex, question: q.question, kind: "multi", answer: trimmed, selected: [] };
 }

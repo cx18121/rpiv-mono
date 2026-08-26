@@ -29,6 +29,6 @@
 
   "editor.failed": "External editor failed",
 
-  "rpc.multi_instructions": "Enter the numbers of all that apply, comma-separated (e.g. \"1,3\"), or type a custom answer as plain text.",
+  "rpc.multi_instructions": "Enter the numbers of all that apply, comma-separated (e.g. \"1,3\"), or type a custom answer as plain text. To submit both, separate them with a semicolon (e.g. \"1,3; custom answer\").",
   "rpc.custom_answer_title": "Type your answer:"
 }

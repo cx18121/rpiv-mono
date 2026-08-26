@@ -77,8 +77,8 @@ code. The `content[0].text` string is written for the model, not for a log.
       questionIndex: number,
       question: string,
       kind: "option" | "custom" | "multi",
-      answer: string | null,       // option label, typed text, or null for multi
-      selected?: string[],         // chosen labels, multi-select only
+      answer: string | null,       // option label, typed text, or optional multi-select custom text
+      selected?: string[],         // chosen labels, multi-select only; preserved with custom text
       notes?: string,              // free-text note, when you wrote one
       preview?: string,            // echoed back when the chosen option carried a preview
     }>,
@@ -92,7 +92,9 @@ code. The `content[0].text` string is written for the model, not for a log.
 ### Envelope text
 
 On success the text reads `User has answered your questions: "<question>"="<answer>". …
-You can now continue with the user's answers in mind.` A chosen option's `preview` is
+You can now continue with the user's answers in mind.` Multi-select labels and custom text
+are returned together in `<answer>` and remain separate in `details.selected` and
+`details.answer`. A chosen option's `preview` is
 appended as `selected preview: <markdown>`, a per-question note as `user notes: <text>`,
 and the Submit tab's global note as a trailing `global note: <text>` segment. A global
 note alone still yields the answered envelope — it counts as an answer even when every

@@ -26,6 +26,6 @@
 
   "editor.failed": "Error del editor externo",
 
-  "rpc.multi_instructions": "Introduce los números de todas las opciones que apliquen, separados por comas (p. ej. \"1,3\"), o escribe una respuesta propia como texto.",
+  "rpc.multi_instructions": "Introduce los números de todas las opciones que apliquen, separados por comas (p. ej. \"1,3\"), o escribe una respuesta propia como texto. Para enviar ambos, sepáralos con punto y coma (p. ej. \"1,3; respuesta propia\").",
   "rpc.custom_answer_title": "Escribe tu respuesta:"
 }

@@ -73,19 +73,28 @@ function computeAutoAdvanceTab(state: QuestionnaireState, runtime: Questionnaire
 	return runtime.questions.length;
 }
 
-function buildSingleSelectAnswer(state: QuestionnaireState, runtime: QuestionnaireRuntime): QuestionAnswer | null {
+function buildAnswer(state: QuestionnaireState, runtime: QuestionnaireRuntime): QuestionAnswer | null {
 	const q = runtime.questions[state.currentTab];
 	if (!q) return null;
 
 	const item = runtime.currentItem;
 
 	if (state.inputMode) {
-		const label = runtime.inputBuffer;
+		const answer = runtime.inputBuffer.length > 0 ? runtime.inputBuffer : null;
+		if (q.multiSelect) {
+			return {
+				questionIndex: state.currentTab,
+				question: q.question,
+				kind: "multi",
+				answer,
+				selected: buildMultiSelected(state, runtime),
+			};
+		}
 		return {
 			questionIndex: state.currentTab,
 			question: q.question,
 			kind: "custom",
-			answer: label.length > 0 ? label : null,
+			answer,
 		};
 	}
 	if (!item) return null;
@@ -175,7 +184,7 @@ function routeInputMode(
 	// the same physical key to both semantic actions.
 	if (kb.matches(data, KEYBIND_NEW_LINE)) return { kind: "ignore" };
 	if (isConfirm(kb, data)) {
-		const answer = buildSingleSelectAnswer(state, runtime);
+		const answer = buildAnswer(state, runtime);
 		if (!answer) return { kind: "ignore" };
 		return { kind: "confirm", answer, autoAdvanceTab: computeAutoAdvanceTab(state, runtime) };
 	}
@@ -242,7 +251,7 @@ function routeMultiSelectTab(
 	}
 	if (isConfirm(kb, data)) {
 		// Enter on the "Type something." row is handled by the inputMode block above
-		// (→ confirm kind:"custom"). Defensive: never enter the toggle/multi_confirm
+		// (→ confirm kind:"multi" with both checked options and custom text). Defensive: never enter the toggle/multi_confirm
 		// path for an inputMode-activating row.
 		if (focusedMeta?.activatesInputMode) return { kind: "ignore" };
 		// Enter on a regular row toggles (matching Space) — committing the question is now
@@ -271,7 +280,7 @@ function routeSingleSelectTab(
 	runtime: QuestionnaireRuntime,
 ): QuestionnaireAction {
 	if (isConfirm(kb, data)) {
-		const answer = buildSingleSelectAnswer(state, runtime);
+		const answer = buildAnswer(state, runtime);
 		if (!answer) return { kind: "ignore" };
 		return { kind: "confirm", answer, autoAdvanceTab: computeAutoAdvanceTab(state, runtime) };
 	}

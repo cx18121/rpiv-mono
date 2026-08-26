@@ -48,7 +48,9 @@ arrows move between lines and return to row navigation at the draft's top and bo
 The draft replaces the static row label while you browse other options and is isolated
 per question. `Ctrl+G` round-trips it through Pi's configured external editor; `Ctrl+U`
 clears it, while `Esc` remains the explicit way to cancel the questionnaire. Confirming
-it produces an answer of `kind: "custom"`.
+it on a single-select question produces an answer of `kind: "custom"`. On a multi-select
+question it produces `kind: "multi"` and preserves both the checked option labels and the
+custom text.
 
 Both labels are reserved — the model cannot author an option that collides with them.
 Both localize with the rest of the UI chrome; the reserved-label check always compares
