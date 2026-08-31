@@ -1,8 +1,8 @@
 /**
  * RPC / dialog-primitive fallback for `ask_user_question`.
  *
- * The canonical TUI path (`ctx.ui.custom()`) renders a tabbed overlay that
- * needs a real terminal. RPC-mode hosts (the VSCode pendant, ACP clients such
+ * The canonical TUI path (`ctx.ui.custom()`) renders a tabbed editor replacement
+ * that needs a real terminal. RPC-mode hosts (the VSCode pendant, ACP clients such
  * as Zed or Paseo) report `hasUI: true` because pi's dialog sub-protocol
  * (`extension_ui_request`/`extension_ui_response`) works, but `ui.custom()`
  * resolves `undefined` without rendering anything (issue #78). `ui.select()`

@@ -1,7 +1,7 @@
 import type { GuidanceFields } from "@juicesharp/rpiv-config";
 import { loadJsonConfigWithLegacyFallback, validateGuidanceFields } from "@juicesharp/rpiv-config";
 
-/** Key spec for the overlay collapse/expand shortcut, e.g. `"ctrl+]"` or `"alt+o"`. */
+/** Key spec for the dialog collapse/expand shortcut, e.g. `"ctrl+]"` or `"alt+o"`. */
 export type CollapseKeySpec = string;
 
 export const DEFAULT_COLLAPSE_KEY: CollapseKeySpec = "ctrl+]";

@@ -7,6 +7,14 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- The questionnaire now replaces the editor instead of covering the conversation with a full-width overlay, so the model's explanation remains visible while the user answers.
+
+### Removed
+
+- The raw terminal listener and overlay handle used to hide and reopen the questionnaire. Collapse mode now stays in the focused editor replacement and shrinks it to one row.
+
 ## [2.8.0] - 2026-08-29
 
 ## [2.7.1] - 2026-08-24

@@ -196,6 +196,17 @@ describe("ask_user_question.execute — terminal attention", () => {
 });
 
 describe("ask_user_question.execute — ctx.ui.custom dispatch", () => {
+	it("replaces the editor instead of covering the transcript with an overlay", async () => {
+		const tool = register();
+		const custom = vi.fn(async () => ({ answers: [], cancelled: true }));
+		const ctx = createMockCtx({ hasUI: true, ui: { custom } as never });
+
+		await tool.execute?.("tc", BASE_PARAMS as never, undefined as never, undefined as never, ctx as never);
+
+		expect(custom).toHaveBeenCalledOnce();
+		expect(custom.mock.calls[0]).toHaveLength(1);
+	});
+
 	it("User cancels (cancelled: true) → decline envelope", async () => {
 		const tool = register();
 		const ctx = ctxWithCustom({ answers: [], cancelled: true });

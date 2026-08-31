@@ -291,20 +291,14 @@ function routeSingleSelectTab(
 export function routeKey(data: string, state: QuestionnaireState, runtime: QuestionnaireRuntime): QuestionnaireAction {
 	const kb = runtime.keybindings;
 
-	// Collapse/expand toggle is a UI-level affordance — intercepted at the top so it
-	// works from every inner state (notes, inputMode, submit tab, multi-select)
-	// without reaching any branch that would otherwise consume the keystroke. The
-	// questionnaire overlay is fully hidden via `OverlayHandle.setHidden(true)` while
-	// collapsed; pi-tui's overlay stack updates accordingly, so overlay-aware consumers
-	// (e.g. `pi-station`) see no visible modal and chat scroll resumes. The toggle key is
-	// also captured at the raw terminal level via `ctx.ui.onTerminalInput` so it still
-	// routes here when the overlay is hidden (pi-tui does not deliver input to a hidden
-	// overlay's `component.handleInput`).
+	// Collapse/expand is intercepted before every inner state so it works from notes,
+	// custom input, the submit tab, and multi-select without another branch consuming it.
+	// The questionnaire replaces the editor rather than covering the transcript, and the
+	// collapsed one-line rendering keeps focus so the same key expands it again.
 	//
 	// The default `ctrl+]` is free in every mainstream macOS terminal (Terminal.app,
-	// iTerm2, Warp), every multiplexer (tmux, zellij, screen — none use it as a prefix),
-	// and the legacy telnet/ssh escape role doesn't apply because our overlay runs
-	// in-process. It is, however, awkward on keyboard layouts where `]` is on the
+	// iTerm2, Warp) and every multiplexer (tmux, zellij, screen). It is awkward on
+	// keyboard layouts where `]` is on the
 	// shifted layer (Latin American `es-AR`/`es-MX` require `Ctrl+Shift+}` for `Ctrl+]`)
 	// — use the `collapseKey` config field to override.
 	// Treat a missing/non-string key as disabled. This can occur at runtime when
