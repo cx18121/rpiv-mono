@@ -77,8 +77,7 @@ named keys `escape`, `esc`, `enter`, `return`, `tab`, `space`, `backspace`, `del
 
 Examples that work: `"ctrl+]"`, `"alt+o"`, `"ctrl+shift+h"`, `"f9"`, `"ctrl+}"`.
 
-Set `"off"` (any casing) to disable the collapse shortcut entirely — no raw terminal
-listener is registered in that case.
+Set `"off"` (any casing) to disable the collapse shortcut entirely.
 
 A spec that does not match the grammar is rejected and the default is used. This is
 strict on purpose: Pi's parser takes the last `+`-separated part as the key and ignores

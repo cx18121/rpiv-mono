@@ -144,6 +144,10 @@ function parseMultiSelectLabels(value: string, q: QuestionData): string[] | null
 	return selected;
 }
 
+function customMultiSelectAnswer(questionIndex: number, question: string, answer: string): QuestionAnswer {
+	return { questionIndex, question, kind: "multi", answer, selected: [] };
+}
+
 /** `undefined` means the user dismissed the dialog (cancel the questionnaire). */
 async function askMultiSelect(
 	ui: DialogUI,
@@ -163,25 +167,20 @@ async function askMultiSelect(
 		return { questionIndex, question: q.question, kind: "multi", answer: null, selected: [] };
 	}
 	const separator = trimmed.indexOf(";");
-	if (separator >= 0) {
-		const selected = parseMultiSelectLabels(trimmed.slice(0, separator), q);
-		if (selected !== null) {
-			const customAnswer = trimmed.slice(separator + 1).trim();
-			return {
-				questionIndex,
-				question: q.question,
-				kind: "multi",
-				answer: customAnswer.length > 0 ? customAnswer : null,
-				selected,
-			};
-		}
+	const selectedText = separator >= 0 ? trimmed.slice(0, separator) : trimmed;
+	const selected = parseMultiSelectLabels(selectedText, q);
+	if (selected === null) {
+		// Any non-index token (words, or an out-of-range number like "13" for three
+		// options) is a custom multi-select answer. Preserve it alongside an empty
+		// selection instead of changing the answer kind.
+		return customMultiSelectAnswer(questionIndex, q.question, trimmed);
 	}
-	const selected = parseMultiSelectLabels(trimmed, q);
-	if (selected !== null) {
-		return { questionIndex, question: q.question, kind: "multi", answer: null, selected };
-	}
-	// Any non-index token (words, or an out-of-range number like "13" for three
-	// options) is a custom multi-select answer. Preserve it alongside an empty
-	// selection instead of changing the answer kind.
-	return { questionIndex, question: q.question, kind: "multi", answer: trimmed, selected: [] };
+	const customAnswer = separator >= 0 ? trimmed.slice(separator + 1).trim() : "";
+	return {
+		questionIndex,
+		question: q.question,
+		kind: "multi",
+		answer: customAnswer.length > 0 ? customAnswer : null,
+		selected,
+	};
 }

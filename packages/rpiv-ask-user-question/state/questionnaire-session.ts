@@ -1,9 +1,9 @@
 import type { Theme } from "@earendil-works/pi-coding-agent";
 import type { Editor, TUI } from "@earendil-works/pi-tui";
-import { COLLAPSE_KEY_OFF, formatKeySpecForDisplay } from "../config.js";
+import { formatKeySpecForDisplay } from "../config.js";
 import type { QuestionData, QuestionnaireResult, QuestionParams } from "../tool/types.js";
 import type { WrappingSelectItem } from "../view/components/wrapping-select.js";
-import { COLLAPSED_HINT_TEMPLATE, HINT_PART_CANCEL, KEY_PLACEHOLDER } from "../view/dialog-builder.js";
+import { COLLAPSED_HINT_TEMPLATE, KEY_PLACEHOLDER } from "../view/dialog-builder.js";
 import type { QuestionnairePropsAdapter } from "../view/props-adapter.js";
 import { buildQuestionnaire, type QuestionnaireBuilt } from "./build-questionnaire.js";
 import { t } from "./i18n-bridge.js";
@@ -118,9 +118,7 @@ export class QuestionnaireSession {
 	private buildCollapsedRender(theme: Theme): (width: number) => string[] {
 		const collapseKeyDisplay = formatKeySpecForDisplay(this.collapseKey);
 		const collapsedHintLine = (): string =>
-			this.collapseKey === COLLAPSE_KEY_OFF
-				? t("hint.cancel", HINT_PART_CANCEL)
-				: t("hint.expand_line", COLLAPSED_HINT_TEMPLATE).replace(KEY_PLACEHOLDER, collapseKeyDisplay);
+			t("hint.expand_line", COLLAPSED_HINT_TEMPLATE).replace(KEY_PLACEHOLDER, collapseKeyDisplay);
 		return (_width: number): string[] => [theme.fg("dim", ` ${collapsedHintLine()} `)];
 	}
 

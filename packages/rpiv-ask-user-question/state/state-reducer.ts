@@ -55,6 +55,28 @@ function syncMultiSelectFromAnswers(
 	return indices;
 }
 
+function multiCustomAnswer(answers: ReadonlyMap<number, QuestionAnswer>, tab: number): string | null {
+	const answer = answers.get(tab);
+	return answer?.kind === "multi" ? answer.answer : null;
+}
+
+function buildMultiAnswer(
+	state: QuestionnaireState,
+	question: QuestionData,
+	selected: string[],
+	customAnswer: string | null,
+): QuestionAnswer {
+	const pendingNotes = state.notesByTab.get(state.currentTab);
+	return {
+		questionIndex: state.currentTab,
+		question: question.question,
+		kind: "multi",
+		answer: customAnswer,
+		selected,
+		...(pendingNotes && pendingNotes.length > 0 ? { notes: pendingNotes } : {}),
+	};
+}
+
 function persistMultiSelectAnswer(state: QuestionnaireState, ctx: ApplyContext): ReadonlyMap<number, QuestionAnswer> {
 	const q = ctx.questions[state.currentTab];
 	if (!q?.multiSelect) return state.answers;
@@ -63,21 +85,12 @@ function persistMultiSelectAnswer(state: QuestionnaireState, ctx: ApplyContext):
 		if (state.multiSelectChecked.has(i)) selected.push(q.options[i]!.label);
 	}
 	const out = new Map(state.answers);
-	const current = out.get(state.currentTab);
-	const customAnswer = current?.kind === "multi" ? current.answer : null;
+	const customAnswer = multiCustomAnswer(out, state.currentTab);
 	if (selected.length === 0 && !customAnswer) {
 		out.delete(state.currentTab);
 		return out;
 	}
-	const pendingNotes = state.notesByTab.get(state.currentTab);
-	out.set(state.currentTab, {
-		questionIndex: state.currentTab,
-		question: q.question,
-		kind: "multi",
-		answer: customAnswer,
-		selected,
-		...(pendingNotes && pendingNotes.length > 0 ? { notes: pendingNotes } : {}),
-	});
+	out.set(state.currentTab, buildMultiAnswer(state, q, selected, customAnswer));
 	return out;
 }
 
@@ -229,17 +242,9 @@ const toggleHandler: Handler<"toggle"> = (state, action, ctx) => {
 const multiConfirmHandler: Handler<"multi_confirm"> = (state, action, ctx) => {
 	const q = ctx.questions[state.currentTab];
 	if (!q) return { state, effects: [] };
-	const pendingNotes = state.notesByTab.get(state.currentTab);
 	const answers = new Map(state.answers);
-	const current = answers.get(state.currentTab);
-	answers.set(state.currentTab, {
-		questionIndex: state.currentTab,
-		question: q.question,
-		kind: "multi",
-		answer: current?.kind === "multi" ? current.answer : null,
-		selected: action.selected,
-		...(pendingNotes && pendingNotes.length > 0 ? { notes: pendingNotes } : {}),
-	});
+	const customAnswer = multiCustomAnswer(answers, state.currentTab);
+	answers.set(state.currentTab, buildMultiAnswer(state, q, action.selected, customAnswer));
 	const synced: QuestionnaireState = {
 		...state,
 		answers,
