@@ -4,8 +4,8 @@ import { LABELS_BY_KIND, ROW_INTENT_META } from "../state/row-intent.js";
 export const MAX_QUESTIONS = 4;
 export const MIN_OPTIONS = 2;
 export const MAX_OPTIONS = 4;
-export const MAX_HEADER_LENGTH = 16;
-export const MAX_LABEL_LENGTH = 60;
+export const MAX_HEADER_LENGTH = 32;
+export const MAX_LABEL_LENGTH = 100;
 
 /**
  * User-facing labels for the three runtime sentinel rows, keyed by their

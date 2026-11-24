@@ -288,8 +288,8 @@ describe("schema constants + RESERVED_LABELS", () => {
 	it("exports the new schema constants with expected values", () => {
 		expect(MIN_OPTIONS).toBe(2);
 		expect(MAX_OPTIONS).toBe(4);
-		expect(MAX_HEADER_LENGTH).toBe(16);
-		expect(MAX_LABEL_LENGTH).toBe(60);
+		expect(MAX_HEADER_LENGTH).toBe(32);
+		expect(MAX_LABEL_LENGTH).toBe(100);
 	});
 
 	it("RESERVED_LABELS includes the Pi sentinels + CC's 'Other'", () => {
